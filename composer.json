@@ -6,7 +6,7 @@
 	"type" : "library",
 	"autoload" : {
 		"psr-4" : {
-			"oldtailor\\\\oauth\\\\" : "src"
+			"oldtailor\\oauth\\" : "src"
 		}
 	}
 }
