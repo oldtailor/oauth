@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 namespace oldtailor\oauth;
 
 use Curl\Curl;
@@ -40,7 +40,7 @@ class OAuth
         return $curl;
     }
 
-    // 鐢ㄦ埛鐧诲綍
+ 
     public function login()
     {
         $state = md5(uniqid(rand(), TRUE));
@@ -60,14 +60,13 @@ class OAuth
         header("Location:$login_url");
     }
 
-    // 鐧诲綍鍥炶皟
+ 
     public function callback()
     {
         $code = Input::get('code') or exit('code');
-        // 妫�娴嬩护鐗岋紝闃叉宸ユ満
+ 
         $this->recorder->read('state') != Input::get('state') && exit('state');
         
-        // 浠ょ墝璇锋眰鍙傛暟
         $params = array(
             "grant_type" => "authorization_code",
             "client_id" => $this->app_id,
