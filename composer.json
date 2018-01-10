@@ -1,0 +1,12 @@
+{
+	"require" : {
+		"php-curl-class/php-curl-class" : "^8.0"
+	},
+	"name" : "oldtailor/oauth",
+	"type" : "library",
+	"autoload" : {
+		"psr-4" : {
+			"oldtailor\\\\oauth\\\\" : "src"
+		}
+	}
+}
