@@ -13,6 +13,8 @@ class OAuth
     const GET_ACCESS_TOKEN_URL = "http://app.midianvip.cn/oauth/token";
 
     const GET_OPENID_URL = "http://app.midianvip.cn/userinfo";
+    
+    const API_URL = "http://app.midianvip.cn/api";
 
     public $app_id;
 
@@ -38,7 +40,7 @@ class OAuth
         return $curl;
     }
 
-    // 用户登录
+    // 鐢ㄦ埛鐧诲綍
     public function login()
     {
         $state = md5(uniqid(rand(), TRUE));
@@ -54,18 +56,18 @@ class OAuth
         );
         
         $login_url = Utils::combineURL(self::GET_AUTH_CODE_URL, $keysArr);
-        
+
         header("Location:$login_url");
     }
 
-    // 登录回调
+    // 鐧诲綍鍥炶皟
     public function callback()
     {
-        $code = Input::get('code') or exit();
-        // 检测令牌，防止工机
-        $this->recorder->read('state') != Input::get('state') && exit();
+        $code = Input::get('code') or exit('code');
+        // 妫�娴嬩护鐗岋紝闃叉宸ユ満
+        $this->recorder->read('state') != Input::get('state') && exit('state');
         
-        // 令牌请求参数
+        // 浠ょ墝璇锋眰鍙傛暟
         $params = array(
             "grant_type" => "authorization_code",
             "client_id" => $this->app_id,
@@ -83,9 +85,28 @@ class OAuth
 
     public function me()
     {
+        $curl = $this->curl();
         
-        $res = $this->curl()->get(self::GET_OPENID_URL);
+        $res = $curl->get(self::GET_OPENID_URL);
         
-        echo $res;
+        if($curl->error) return null;
+        
+        return $res;
     }
+    
+    
+    /**
+     * api 请求
+     * @param string $method
+     * @param array $params
+     */
+    public function api($method,$params=[]){
+        
+        $curl = $this->curl();
+        $curl->post(self::API_URL.'/'.$method,$params);
+        
+        return $curl->response;
+    }
+    
+    
 }

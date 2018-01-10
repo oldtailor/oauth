@@ -1,12 +1,17 @@
 {
-	"require" : {
-		"php-curl-class/php-curl-class" : "^8.0"
-	},
 	"name" : "oldtailor/oauth",
 	"type" : "library",
+	"authors" : [{
+			"name" : "oldtailor",
+			"email" : "1058776960@qq.com"
+		}
+	],
+	"require" : {
+		"php-curl-class/php-curl-class" : "~8.0"
+	},
 	"autoload" : {
 		"psr-4" : {
-			"oldtailor\\oauth\\" : "src"
+			"oldtailor\\oauth\\" : "src/"
 		}
 	}
 }
