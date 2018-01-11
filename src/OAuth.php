@@ -1,10 +1,20 @@
-﻿<?php
+<?php
 namespace oldtailor\oauth;
 
 use Curl\Curl;
+use think\Cache;
+use oldtailor\sdk\errors\ConnectError;
+use oldtailor\sdk\errors\SystemError;
+use oldtailor\sdk\errors\UserAuthError;
+use oldtailor\sdk\errors\ParamError;
+use oldtailor\sdk\errors\LogicError;
 
 class OAuth
 {
+
+    protected $recorder;
+
+    protected $error;
 
     const VERSION = "2.0";
 
@@ -13,18 +23,18 @@ class OAuth
     const GET_ACCESS_TOKEN_URL = "http://app.midianvip.cn/oauth/token";
 
     const GET_OPENID_URL = "http://app.midianvip.cn/userinfo";
-    
+
     const API_URL = "http://app.midianvip.cn/api";
+
+    const GRANT_TYPE_AUTHORIZATION_CODE = 'authorization_code';
+
+    const GRANT_TYPE_CLIENT_CREDENTIALS = 'client_credentials';
 
     public $app_id;
 
     public $app_key;
 
     public $redirect_uri;
-
-    protected $recorder;
-
-    protected $error;
 
     function __construct()
     {
@@ -35,12 +45,10 @@ class OAuth
     {
         $curl = new Curl();
         
-        $curl->setHeader('Authorization', 'Bearer ' . $this->recorder->read('token'));
-        
         return $curl;
     }
 
- 
+    // 鐢ㄦ埛鐧诲綍
     public function login()
     {
         $state = md5(uniqid(rand(), TRUE));
@@ -52,30 +60,33 @@ class OAuth
             "client_id" => $this->app_id,
             "redirect_uri" => $this->redirect_uri,
             "state" => $state,
-            "scope" => 'openid'
+            "scope" => 'openid member'
         );
         
         $login_url = Utils::combineURL(self::GET_AUTH_CODE_URL, $keysArr);
-
+        
         header("Location:$login_url");
     }
 
- 
+    // 鐧诲綍鍥炶皟
     public function callback()
     {
         $code = Input::get('code') or exit('code');
- 
+        // 妫�娴嬩护鐗岋紝闃叉宸ユ満
         $this->recorder->read('state') != Input::get('state') && exit('state');
         
+        // 浠ょ墝璇锋眰鍙傛暟
         $params = array(
-            "grant_type" => "authorization_code",
+            "grant_type" => self::GRANT_TYPE_AUTHORIZATION_CODE,
             "client_id" => $this->app_id,
-            "redirect_uri" => urlencode($this->redirect_uri),
+            "redirect_uri" => $this->redirect_uri,
             "client_secret" => $this->app_key,
             "code" => $code
         );
         
-        $response = $this->curl()->post(self::GET_ACCESS_TOKEN_URL, $params);
+        $curl = $this->curl();
+        
+        $response = $curl->post(self::GET_ACCESS_TOKEN_URL, $params);
         
         $this->recorder->write('token', $response->access_token);
         
@@ -86,25 +97,89 @@ class OAuth
     {
         $curl = $this->curl();
         
-        $res = $curl->get(self::GET_OPENID_URL);
+        $curl->setHeader('Authorization', 'Bearer ' . $this->recorder->read('token') );
         
-        if($curl->error) return null;
+        $curl->get(self::GET_OPENID_URL);
+
+        if ($curl->error) return null;
         
-        return $res;
+        return json_decode($curl->rawResponse, true);
+    }
+
+    /**
+     * api 请求
+     * 
+     * @param string $method
+     * @param array $params
+     */
+    public function api($method, $token ,$params = [])
+    {
+        $curl = $this->curl();
+        
+        $curl->setHeader('Authorization', 'Bearer ' . $token );
+        
+        $curl->post(self::API_URL . '/' . $method, $params);
+        
+        if($curl->error) throw new ConnectError("api 网络错误");
+        
+        $resp = $curl->response;
+        
+        if(!is_object($resp) ) throw new SystemError($resp);
+        
+        if($resp->res_code != "SUCCESS" ){
+            
+            switch ($resp->err_code){
+                case 1:
+                    throw new SystemError($resp->err_code_des);
+                case 4:
+                    throw new UserAuthError($resp->err_code_des);
+                case 5:
+                    throw new ParamError($resp->err_code_des);
+                case 6:
+                    throw new LogicError($resp->err_code_des,$resp->err_code_sub);
+                default:
+                    throw new \Exception("unknown");
+            }
+        }
+        
+        return $resp->response;
+    }
+    
+    public function member($method,$params=[]){
+        
+        return $this->api('member.'.$method, $this->recorder->read('token'),$params);
+    }
+    
+    public function common($method,$params=[]){
+        
+        $token = Cache::get('client_token');
+        
+        $token || $token = $this->getToken();
+        
+        return $this->api('common.'.$method , $token , $params);
     }
     
     
     /**
-     * api 请求
-     * @param string $method
-     * @param array $params
+     * 获取 client_credentials的token
      */
-    public function api($method,$params=[]){
+    public function getToken()
+    {
+        $params = [
+            'grant_type' => self::GRANT_TYPE_CLIENT_CREDENTIALS,
+            'client_id' => $this->app_id,
+            'client_secret' => $this->app_key
+        ];
         
         $curl = $this->curl();
-        $curl->post(self::API_URL.'/'.$method,$params);
         
-        return $curl->response;
+        $resp = $curl->post(self::GET_ACCESS_TOKEN_URL, $params);
+        
+        if ($curl->error) return null;
+        
+        Cache::set('client_token', $resp->access_token , $resp->expires_in);
+        
+        return $resp->access_token;
     }
     
     

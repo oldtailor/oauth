@@ -9,19 +9,22 @@ class Recorder
     private $inc;
 
     private $error;
-
+    
+    private $key = "oldtailor_oauth";
+    
     public function __construct()
     {
         session_start();
         
         $this->error = new ErrorCase();
         
-        self::$data = empty($_SESSION['oldtailor_oauth']) ? array() : $_SESSION['oldtailor_oauth'];
+        self::$data = empty($_SESSION[$this->key]) ? array() : $_SESSION[$this->key];
     }
 
     public function write($name, $value)
-    {
+    {           
         self::$data[$name] = $value;
+        $this->save();
     }
 
     public function read($name)
@@ -36,10 +39,12 @@ class Recorder
     public function delete($name)
     {
         unset(self::$data[$name]);
+        $this->save();
     }
 
-    function __destruct()
+    private function save()
     {
-        $_SESSION['oldtailor_oauth'] = self::$data;
+        $_SESSION[$this->key] = self::$data;
     }
+    
 }
