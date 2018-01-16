@@ -14,8 +14,7 @@ class Recorder
     
     public function __construct()
     {
-        session_start();
-        
+
         $this->error = new ErrorCase();
         
         self::$data = empty($_SESSION[$this->key]) ? array() : $_SESSION[$this->key];
