@@ -4,46 +4,37 @@ namespace oldtailor\oauth;
 class Recorder
 {
 
-    private static $data;
+    private $data;
 
-    private $inc;
-
-    private $error;
-    
     private $key = "oldtailor_oauth";
-    
+
     public function __construct()
     {
-
-        $this->error = new ErrorCase();
-        
-        self::$data = empty($_SESSION[$this->key]) ? array() : $_SESSION[$this->key];
+        $this->data = empty($_SESSION[$this->key]) ? array() : $_SESSION[$this->key];
     }
 
     public function write($name, $value)
-    {           
-        self::$data[$name] = $value;
-        $this->save();
+    {
+        $this->data[$name] = $value;
     }
 
     public function read($name)
     {
-        if (empty(self::$data[$name])) {
+        if (empty($this->data[$name])) {
             return null;
         } else {
-            return self::$data[$name];
+            return $this->data[$name];
         }
     }
-    
+
     public function delete($name)
     {
-        unset(self::$data[$name]);
-        $this->save();
+        unset($this->data[$name]);
     }
 
-    private function save()
+    public function __construct()
     {
-        $_SESSION[$this->key] = self::$data;
+        $_SESSION[$this->key] = $this->data;
     }
     
 }
