@@ -42,7 +42,7 @@ class Api {
     }
     
     public function __get($name){
-        return $this->data[$name] ?? null;
+        return empty($this->data[$name]) ? null : $this->data[$name];
     }
     
     public function __set($name , $value){

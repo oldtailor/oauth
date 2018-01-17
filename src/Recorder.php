@@ -3,13 +3,13 @@ namespace oldtailor\oauth;
 
 class Recorder
 {
-
+    
     private $data;
+    private $key;
 
-    private $key = "oldtailor_oauth";
-
-    public function __construct()
+    public function __construct($key,$long=false)
     {
+        $this->key = $key;
         $this->data = empty($_SESSION[$this->key]) ? array() : $_SESSION[$this->key];
     }
 
@@ -32,7 +32,7 @@ class Recorder
         unset($this->data[$name]);
     }
 
-    public function __construct()
+    public function __destruct()
     {
         $_SESSION[$this->key] = $this->data;
     }

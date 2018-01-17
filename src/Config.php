@@ -1,19 +1,51 @@
 <?php
 namespace oldtailor\oauth;
 
-class Config {
-    
-    private static $cfg = [];
-    
-    public static function get($grant_type){
+/**
+ * oauth2 配置
+ *
+ * @author metooweb
+ * @property string $client_id
+ * @property string $client_secret
+ * @property string $grant_type
+ * @property string $scope
+ * @property string $redirect_uri
+ * @property string $recorder_key
+ */
+class Config
+{
+
+    private $data = [];
+
+    private static $pool = [];
+
+    public static function init(){
         
-        return empty(static::$cfg[$grant_type]) ? [] : static::$cfg[$grant_type];
+        return new static();
     }
     
-    public static function set($grant_type,$cfg){
-        
-        static::$cfg[$grant_type] = $cfg;    
+    public static function set($name, Config $cfg)
+    {
+        static::$pool[$name] = $cfg;
     }
-    
-    
+
+    /**
+     * 获取配置
+     * @param string $name
+     * @return NULL|Config
+     */
+    public static function get($name)
+    {
+        return empty(static::$pool[$name]) ? null : static::$pool[$name];
+    }
+
+    public function __set($name, $value)
+    {
+        $this->data[$name] = $value;
+    }
+
+    public function __get($name)
+    {
+        return empty($this->data[$name]) ? null : $this->data[$name];
+    }
 }
