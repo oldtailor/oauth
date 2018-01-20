@@ -56,7 +56,7 @@ class OAuth
         return static::$pool[$cfg->name];
     }
     
-    public function login()
+    public function login($user_type = Api::USER_TYPE_MEMBER)
     {
         
         $state = md5(uniqid(rand(), TRUE));
