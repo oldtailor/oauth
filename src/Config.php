@@ -5,6 +5,7 @@ namespace oldtailor\oauth;
  * oauth2 配置
  *
  * @author metooweb
+ * @property string $name 配置名
  * @property string $client_id
  * @property string $client_secret
  * @property string $grant_type
@@ -19,9 +20,15 @@ class Config
 
     private static $pool = [];
 
-    public static function init(){
+    public function __construct($data=[]){
         
-        return new static();
+        $this->data = $data;
+    
+    }
+    
+    public static function init($data=[]){
+        
+        return new static($data = []);
     }
     
     public static function set($name, Config $cfg)

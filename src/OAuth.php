@@ -36,6 +36,7 @@ class OAuth
      * @var Config
      */
     private $cfg;
+    private static $pool = [];
 
     function __construct($cfg)
     {
@@ -44,6 +45,17 @@ class OAuth
         $this->recorder = new Recorder($this->cfg->recorder_key , $this->cfg->grant_type == static::GRANT_TYPE_CLIENT_CREDENTIALS );
     }
 
+    public static function init($cfg){
+        
+        $cfg = is_string($cfg) ? Config::get($cfg) : $cfg;
+        
+        if( !isset( static::$pool[$cfg->name] ) ) {
+            static::$pool[$cfg->name] = new static($cfg);
+        }
+        
+        return static::$pool[$cfg->name];
+    }
+    
     public function login()
     {
         
@@ -153,8 +165,17 @@ class OAuth
 
     public function call($method, $params)
     {
-        if (! $token = $this->recorder->read('token')) {
-            throw new TokenException('token empty', TokenException::ERROR_TOKEN_EMPTY);
+        $token = $this->recorder->read('token');
+        
+        if (!$token) {
+            
+            if( $this->cfg->grant_type == static::GRANT_TYPE_CLIENT_CREDENTIALS ){    
+                $this->refresh();
+                return $this->call($method, $params);
+            }else{
+                throw new TokenException('token empty', TokenException::ERROR_TOKEN_EMPTY);
+            }
+            
         }
         
         if ($this->recorder->read('time_expired') < time()) { // token 过期，刷新token
@@ -186,7 +207,8 @@ class OAuth
     public function me()
     {
         if (! $token = $this->recorder->read('token')) {
-            throw new TokenException('token empty', TokenException::ERROR_TOKEN_EMPTY);
+            //throw new TokenException('token empty', TokenException::ERROR_TOKEN_EMPTY);
+            return null;
         }
         
         if ($this->recorder->read('time_expired') < time()) { // token 过期，刷新token
