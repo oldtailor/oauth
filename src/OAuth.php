@@ -45,6 +45,10 @@ class OAuth
         $this->recorder = new Recorder($this->cfg->recorder_key , $this->cfg->grant_type == static::GRANT_TYPE_CLIENT_CREDENTIALS );
     }
 
+    /**
+     * @param string|Config $cfg
+     * @return static
+     */
     public static function init($cfg){
         
         $cfg = is_string($cfg) ? Config::get($cfg) : $cfg;
