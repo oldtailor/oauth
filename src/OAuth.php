@@ -53,9 +53,7 @@ class OAuth
         
         $cfg = is_string($cfg) ? Config::get($cfg) : $cfg;
         
-        if( !isset( static::$pool[$cfg->name] ) ) {
-            static::$pool[$cfg->name] = new static($cfg);
-        }
+        isset( static::$pool[$cfg->name] ) || static::$pool[$cfg->name] = new static($cfg);
         
         return static::$pool[$cfg->name];
     }
@@ -129,8 +127,6 @@ class OAuth
         if ($curl->error)
             throw ($curl->errorCode == 401 ? new AccountException("用户名或密码错误") : new ApiException($curl->response->error . ':' . $curl->response->error_description));
         
-            print_r($curl->response);
-            
         $this->recorder->write('token', $curl->response->access_token);
         empty($curl->response->refresh_token) || $this->recorder->write('refresh_token', $curl->response->refresh_token);
         $this->recorder->write('time_expired', $now + $curl->response->expires_in);

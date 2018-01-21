@@ -31,9 +31,9 @@ class Config
         return new static($data = []);
     }
     
-    public static function set($name, Config $cfg)
+    public static function set(Config $cfg)
     {
-        static::$pool[$name] = $cfg;
+        static::$pool[$cfg->name] = $cfg;
     }
 
     /**
