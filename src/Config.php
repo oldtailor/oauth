@@ -27,8 +27,8 @@ class Config
     }
     
     public static function init($data=[]){
-        
-        return static::$pool[$cfg->name] = new static($data);
+        $cfg =  new static($data);
+        return static::$pool[$cfg->name] = $cfg;
     }
     
     public static function set(Config $cfg)
